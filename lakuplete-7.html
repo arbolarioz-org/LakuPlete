@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Lakuplete — Wallet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0B0E12;
+    --panel:#12161C;
+    --panel-2:#161B22;
+    --panel-3:#1B212A;
+    --line:#262C35;
+    --line-soft:#1D232C;
+    --paper:#ECEEF1;
+    --muted:#838B99;
+    --muted-2:#5B6270;
+    --seal:#B8935B;
+    --seal-soft:rgba(184,147,90,0.14);
+    --success:#5FA777;
+    --success-soft:rgba(95,167,119,0.14);
+    --warning:#D0973F;
+    --warning-soft:rgba(208,151,63,0.14);
+    --danger:#C4573F;
+    --danger-soft:rgba(196,87,63,0.14);
+    --info:#6B8CAE;
+    --info-soft:rgba(107,140,174,0.14);
+    --nav-h:64px;
+    --safe-b:env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+  }
+  h1,h2,h3{font-family:'IBM Plex Serif', serif; font-weight:500; margin:0;}
+  .mono{font-family:'IBM Plex Mono', monospace;}
+  a{color:inherit;}
+  button{font-family:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent;}
+  :focus-visible{outline:2px solid var(--seal); outline-offset:2px;}
+
+  /* ---------- phone frame ---------- */
+  .frame{
+    width:100%; max-width:430px; min-height:100vh;
+    background:var(--ink);
+    position:relative;
+    border-left:1px solid var(--line-soft);
+    border-right:1px solid var(--line-soft);
+    display:flex; flex-direction:column;
+  }
+
+  /* ---------- header ---------- */
+  .app-header{
+    position:sticky; top:0; z-index:20;
+    background:rgba(11,14,18,0.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:16px 18px 14px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .seal-mark{
+    width:30px; height:30px; border-radius:50%;
+    border:1px solid var(--seal);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Serif', serif; font-size:12px; color:var(--seal);
+    flex-shrink:0;
+  }
+  .brand-text{display:flex; flex-direction:column;}
+  .brand-name{font-family:'IBM Plex Serif', serif; font-size:16.5px; line-height:1.1;}
+  .brand-sub{color:var(--muted-2); font-size:10.5px; margin-top:2px;}
+  .avatar-btn{
+    width:32px; height:32px; border-radius:50%; background:var(--panel-2);
+    border:1px solid var(--line); color:var(--muted); font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'IBM Plex Mono', monospace;
+  }
+  .avatar-btn:hover{border-color:var(--seal); color:var(--seal);}
+
+  /* ---------- scroll body ---------- */
+  .app-body{flex:1; padding-bottom:calc(var(--nav-h) + var(--safe-b) + 18px);}
+  .view{display:none; padding:20px 18px 4px;}
+  .view.active{display:block;}
+
+  .view-head{margin-bottom:16px;}
+  .view-title{font-size:19px;}
+  .view-sub{color:var(--muted-2); font-size:12px; margin-top:3px;}
+
+  /* ---------- balance hero (ledger folio, not a gradient card) ---------- */
+  .balance-block{
+    border:1px solid var(--line); border-radius:4px; padding:20px 20px 18px;
+    background:var(--panel); margin-bottom:16px; position:relative;
+  }
+  .balance-block::before{
+    content:""; position:absolute; left:0; top:14px; bottom:14px; width:2px; background:var(--seal);
+  }
+  .balance-label{color:var(--muted-2); font-size:11.5px; margin-bottom:8px; padding-left:12px;}
+  .balance-value{font-family:'IBM Plex Mono', monospace; font-size:32px; letter-spacing:-0.5px; padding-left:12px;}
+  .balance-delta{display:flex; align-items:center; gap:6px; margin-top:8px; padding-left:12px; font-size:12px;}
+  .balance-delta.up{color:var(--success);}
+  .balance-delta.down{color:var(--danger);}
+  .balance-folio{
+    position:absolute; top:20px; right:20px; font-family:'IBM Plex Mono', monospace;
+    font-size:11px; color:var(--muted-2);
+  }
+
+  /* ---------- quick actions ---------- */
+  .actions-row{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:22px;}
+  .action-btn{
+    background:var(--panel); border:1px solid var(--line); color:var(--paper);
+    border-radius:3px; padding:12px 4px 10px; display:flex; flex-direction:column;
+    align-items:center; gap:7px; font-size:11px;
+  }
+  .action-btn:hover{border-color:var(--seal);}
+  .action-icon{
+    width:30px; height:30px; border-radius:50%; background:var(--seal-soft);
+    display:flex; align-items:center; justify-content:center; color:var(--seal);
+  }
+
+  /* ---------- section head ---------- */
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;}
+  .section-title{font-size:13.5px; color:var(--paper);}
+  .section-link{color:var(--seal); font-size:12px; background:none; border:none; padding:0;}
+
+  /* ---------- sparkline ---------- */
+  .spark-block{
+    border:1px solid var(--line); border-radius:4px; padding:16px 16px 12px; background:var(--panel);
+    margin-bottom:22px;
+  }
+  .spark-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;}
+  .spark-total{font-family:'IBM Plex Mono', monospace; font-size:17px;}
+  .spark-bars{display:flex; align-items:flex-end; gap:7px; height:64px;}
+  .spark-bar-wrap{flex:1; display:flex; flex-direction:column; align-items:center; gap:6px; height:100%; justify-content:flex-end;}
+  .spark-bar{width:100%; max-width:22px; border-radius:2px 2px 0 0; background:var(--panel-3); transition:background .12s ease;}
+  .spark-bar.today{background:var(--seal);}
+  .spark-day{color:var(--muted-2); font-size:10px;}
+
+  /* ---------- transaction list ---------- */
+  .day-group{margin-bottom:6px;}
+  .day-label{color:var(--muted-2); font-size:11px; margin:16px 0 6px; padding-left:2px;}
+  .day-label:first-child{margin-top:0;}
+  .txn-row{
+    display:flex; align-items:center; gap:12px; padding:11px 4px;
+    border-bottom:1px solid var(--line-soft); cursor:pointer;
+  }
+  .txn-row:last-child{border-bottom:none;}
+  .txn-row:active{background:var(--panel-2);}
+  .txn-icon{
+    width:36px; height:36px; border-radius:50%; background:var(--panel-2); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:13px; color:var(--muted);
+  }
+  .txn-mid{flex:1; min-width:0;}
+  .txn-name{font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .txn-sub{color:var(--muted-2); font-size:11px; margin-top:2px; display:flex; align-items:center; gap:6px;}
+  .txn-amount{font-family:'IBM Plex Mono', monospace; font-size:13.5px; text-align:right; flex-shrink:0;}
+  .txn-amount.out{color:var(--paper);}
+  .txn-amount.in{color:var(--success);}
+
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    padding:2px 7px; border-radius:3px; font-size:10.5px; font-weight:500;
+    border:1px solid transparent;
+  }
+  .badge.success{color:var(--success); background:var(--success-soft); border-color:rgba(95,167,119,0.3);}
+  .badge.warning{color:var(--warning); background:var(--warning-soft); border-color:rgba(208,151,63,0.3);}
+  .badge.danger{color:var(--danger); background:var(--danger-soft); border-color:rgba(196,87,63,0.3);}
+  .badge.info{color:var(--info); background:var(--info-soft); border-color:rgba(107,140,174,0.3);}
+  .dot{width:5px; height:5px; border-radius:50%; display:inline-block; flex-shrink:0;}
+  .dot.success{background:var(--success);}
+  .dot.warning{background:var(--warning);}
+  .dot.danger{background:var(--danger);}
+  .dot.info{background:var(--info);}
+
+  /* ---------- filter chips (activity view) ---------- */
+  .chip-row{display:flex; gap:7px; margin-bottom:16px; overflow-x:auto; padding-bottom:2px;}
+  .chip{
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    padding:6px 12px; border-radius:12px; font-size:11.5px; white-space:nowrap; flex-shrink:0;
+  }
+  .chip.active{border-color:var(--seal); color:var(--seal); background:var(--seal-soft);}
+
+  /* ---------- stats row (ledger view) ---------- */
+  .stat-strip{display:grid; grid-template-columns:1fr 1fr 1fr; border:1px solid var(--line); border-radius:4px; overflow:hidden; margin-bottom:20px;}
+  .stat-cell{padding:14px 12px; border-right:1px solid var(--line); background:var(--panel);}
+  .stat-cell:last-child{border-right:none;}
+  .stat-cell-value{font-family:'IBM Plex Mono', monospace; font-size:15px;}
+  .stat-cell-label{color:var(--muted-2); font-size:10.5px; margin-top:4px;}
+
+  /* ---------- ledger rows ---------- */
+  .ledger-entry{
+    display:grid; grid-template-columns:1fr auto; gap:2px 12px; padding:12px 4px;
+    border-bottom:1px solid var(--line-soft); cursor:pointer;
+  }
+  .ledger-entry:last-child{border-bottom:none;}
+  .ledger-entry:active{background:var(--panel-2);}
+  .ledger-id{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--paper);}
+  .ledger-meta{grid-column:1; color:var(--muted-2); font-size:11px;}
+  .ledger-amt{font-family:'IBM Plex Mono', monospace; font-size:13px; align-self:start;}
+
+  /* ---------- profile view ---------- */
+  .profile-card{border:1px solid var(--line); border-radius:4px; padding:20px; background:var(--panel); margin-bottom:18px; display:flex; align-items:center; gap:14px;}
+  .profile-avatar{width:48px; height:48px; border-radius:50%; background:var(--seal-soft); color:var(--seal); display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Serif',serif; font-size:17px; flex-shrink:0;}
+  .profile-name{font-size:15px;}
+  .profile-email{color:var(--muted-2); font-size:11.5px; margin-top:2px;}
+  .field-row{display:flex; justify-content:space-between; gap:14px; padding:12px 2px; border-bottom:1px solid var(--line-soft); font-size:12.5px;}
+  .field-row:last-child{border-bottom:none;}
+  .field-label{color:var(--muted-2);}
+  .field-value{font-family:'IBM Plex Mono', monospace; text-align:right;}
+
+  /* ---------- bottom nav ---------- */
+  .bottom-nav{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:0;
+    width:100%; max-width:430px; height:calc(var(--nav-h) + var(--safe-b));
+    padding-bottom:var(--safe-b);
+    background:rgba(18,22,28,0.94); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);
+    display:grid; grid-template-columns:repeat(4,1fr);
+    z-index:30;
+  }
+  .nav-btn{
+    background:none; border:none; color:var(--muted-2);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    font-size:10.5px;
+  }
+  .nav-btn svg{width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.6;}
+  .nav-btn.active{color:var(--seal);}
+
+  /* ---------- overlay + bottom sheet ---------- */
+  .overlay{position:fixed; inset:0; background:rgba(6,8,10,0.6); display:none; z-index:40;}
+  .overlay.open{display:block;}
+  .sheet{
+    position:fixed; left:50%; transform:translateX(-50%) translateY(100%); bottom:0;
+    width:100%; max-width:430px; max-height:82vh; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); border-bottom:none;
+    border-radius:14px 14px 0 0; z-index:50;
+    transition:transform .22s ease;
+    padding-bottom:calc(20px + var(--safe-b));
+  }
+  @media (prefers-reduced-motion: reduce){ .sheet{transition:none;} }
+  .sheet.open{transform:translateX(-50%) translateY(0);}
+  .sheet-handle{width:36px; height:4px; border-radius:2px; background:var(--line); margin:10px auto 4px;}
+  .sheet-head{padding:12px 20px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-start;}
+  .sheet-eyebrow{color:var(--muted-2); font-size:11px; margin-bottom:3px;}
+  .sheet-title{font-family:'IBM Plex Mono', monospace; font-size:13.5px; word-break:break-all;}
+  .sheet-close{background:transparent; border:1px solid var(--line); color:var(--muted); width:26px; height:26px; border-radius:50%; flex-shrink:0; font-size:13px;}
+  .sheet-body{padding:16px 20px 4px;}
+  .json-block{
+    background:var(--ink); border:1px solid var(--line); border-radius:3px;
+    padding:14px; margin-top:14px; font-family:'IBM Plex Mono', monospace; font-size:11px;
+    color:var(--muted); white-space:pre-wrap; word-break:break-all; line-height:1.6;
+  }
+  .section-label{color:var(--muted-2); font-size:11px; margin:18px 0 8px;}
+
+  /* ---------- forms (send / request sheets) ---------- */
+  .form-row{margin-bottom:14px;}
+  .form-row label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:6px;}
+  .form-row input, .form-row select{
+    width:100%; background:var(--ink); border:1px solid var(--line); color:var(--paper);
+    padding:10px 11px; border-radius:3px; font-size:13.5px; font-family:'IBM Plex Mono', monospace;
+  }
+  .form-row input:focus, .form-row select:focus{border-color:var(--seal);}
+  .btn{
+    background:var(--seal); color:#1A140B; border:none; width:100%;
+    padding:12px 16px; border-radius:3px; font-size:13.5px; font-weight:500;
+  }
+  .btn:hover{background:#c9a267;}
+  .form-error{color:var(--danger); font-size:11.5px; margin-top:2px; margin-bottom:12px; display:none;}
+  .form-error.show{display:block;}
+  .confirm-note{
+    border:1px solid rgba(95,167,119,0.3); background:var(--success-soft); color:var(--success);
+    padding:11px 14px; border-radius:3px; font-size:12px; margin-bottom:14px; display:none;
+  }
+  .confirm-note.show{display:block;}
+
+  .empty{color:var(--muted-2); font-size:12.5px; padding:20px 4px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <header class="app-header">
+    <div class="brand">
+      <div class="seal-mark">LP</div>
+      <div class="brand-text">
+        <div class="brand-name">Lakuplete</div>
+        <div class="brand-sub">Wallet</div>
+      </div>
+    </div>
+    <button class="avatar-btn" id="openProfileFromHeader">JR</button>
+  </header>
+
+  <div class="app-body">
+
+    <!-- HOME -->
+    <div class="view active" id="view-home">
+      <div class="balance-block">
+        <div class="balance-folio mono">ce12cfe1…8ed367</div>
+        <div class="balance-label">Available balance</div>
+        <div class="balance-value mono" id="homeBalance">$0.00</div>
+        <div class="balance-delta up" id="homeDelta">↑ 0.0% this week</div>
+      </div>
+
+      <div class="actions-row">
+        <button class="action-btn" data-open-sheet="send">
+          <span class="action-icon">↑</span>Send
+        </button>
+        <button class="action-btn" data-open-sheet="request">
+          <span class="action-icon">↓</span>Request
+        </button>
+        <button class="action-btn" data-open-sheet="topup">
+          <span class="action-icon">+</span>Top up
+        </button>
+        <button class="action-btn" data-go="profile">
+          <span class="action-icon">▤</span>Statements
+        </button>
+      </div>
+
+      <div class="spark-block">
+        <div class="spark-top">
+          <div>
+            <div class="section-title">This week</div>
+          </div>
+          <div class="spark-total mono" id="sparkTotal">—</div>
+        </div>
+        <div class="spark-bars" id="sparkBars"></div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">Recent activity</div>
+        <button class="section-link" data-go="activity">See all →</button>
+      </div>
+      <div id="homeTxnList"></div>
+    </div>
+
+    <!-- ACTIVITY -->
+    <div class="view" id="view-activity">
+      <div class="view-head">
+        <div class="view-title">Activity</div>
+        <div class="view-sub">Every payment intent against this account.</div>
+      </div>
+      <div class="chip-row" id="activityChips"></div>
+      <div id="activityList"></div>
+    </div>
+
+    <!-- LEDGER -->
+    <div class="view" id="view-ledger">
+      <div class="view-head">
+        <div class="view-title">Ledger</div>
+        <div class="view-sub">Append-only charge log, Custom Edge Billing engine.</div>
+      </div>
+      <div class="stat-strip" id="ledgerStats"></div>
+      <div id="ledgerList"></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="view" id="view-profile">
+      <div class="view-head">
+        <div class="view-title">Profile</div>
+      </div>
+      <div class="profile-card">
+        <div class="profile-avatar">JR</div>
+        <div>
+          <div class="profile-name">Jordan Reyes</div>
+          <div class="profile-email">jordan@lakuplete.internal</div>
+        </div>
+      </div>
+      <div class="section-label">Account</div>
+      <div class="table-wrap" style="border:1px solid var(--line); border-radius:4px; padding:2px 14px; background:var(--panel); margin-bottom:18px;">
+        <div class="field-row"><span class="field-label">entry_id</span><span class="field-value">ce12cfe1…8ed367</span></div>
+        <div class="field-row"><span class="field-label">entry_code</span><span class="field-value">billing-ledger-svc</span></div>
+        <div class="field-row"><span class="field-label">currency</span><span class="field-value">usd</span></div>
+        <div class="field-row"><span class="field-label">auth</span><span class="field-value">google_oauth2</span></div>
+      </div>
+      <div class="section-label">Security</div>
+      <div class="table-wrap" style="border:1px solid var(--line); border-radius:4px; padding:2px 14px; background:var(--panel); margin-bottom:18px;">
+        <div class="field-row"><span class="field-label">active key</span><span class="field-value">key-9f21</span></div>
+        <div class="field-row"><span class="field-label">rotated</span><span class="field-value">6d ago</span></div>
+        <div class="field-row"><span class="field-label">session</span><span class="field-value">httpOnly JWT</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-go="home">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" data-go="activity">
+      <svg viewBox="0 0 24 24"><path d="M3 12h4l2 7 4-14 2 7h6"/></svg>
+      Activity
+    </button>
+    <button class="nav-btn" data-go="ledger">
+      <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M9 9h7M9 13h7M9 17h4"/></svg>
+      Ledger
+    </button>
+    <button class="nav-btn" data-go="profile">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.4"/><path d="M4.5 20c1.6-3.8 5-5.6 7.5-5.6s5.9 1.8 7.5 5.6"/></svg>
+      Profile
+    </button>
+  </nav>
+
+  <!-- SHEET: transaction detail -->
+  <div class="overlay" id="overlay"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div>
+        <div class="sheet-eyebrow" id="sheetEyebrow">Payment intent</div>
+        <div class="sheet-title" id="sheetTitle">—</div>
+      </div>
+      <button class="sheet-close" id="closeSheet">✕</button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+
+</div>
+
+<script>
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const ENTRY_ID = "ce12cfe1-8afc-4eed-8ea9-3f92808ed367";
+  const ENTRY_CODE = "billing-ledger-svc";
+
+  // ---------- mock data, same shape as the Payment Edge API ----------
+  let payments = [
+    { id:"pi_7a2e9c14", entry_code:"kyc-verification-svc", name:"KYC Verification Svc", amount_cents:-180000, status:"succeeded", date:"2026-09-11", idempotency_key:"idem_4471a", cat:"◆" },
+    { id:"pi_b3f0e2a7", entry_code:"invoice-reconciler-agent", name:"Invoice Reconciler Agent", amount_cents:-24900, status:"pending", date:"2026-09-11", idempotency_key:"idem_9021b", cat:"◇" },
+    { id:"pi_2c9d1a4f", entry_code:"edge-cache-cluster", name:"Edge Cache Cluster", amount_cents:-320410, status:"succeeded", date:"2026-09-10", idempotency_key:"idem_3312c", cat:"◆" },
+    { id:"pi_e1a4c8f0", entry_code:"external-payout", name:"Payout — Priya N.", amount_cents:520000, status:"succeeded", date:"2026-09-10", idempotency_key:"idem_7743d", cat:"↧" },
+    { id:"pi_f6b2e0a9", entry_code:"postgres-primary-cluster", name:"Postgres Primary Cluster", amount_cents:-89000, status:"failed", date:"2026-09-09", idempotency_key:"idem_1102e", cat:"◆" },
+    { id:"pi_9d3a7c1e", entry_code:"object-scan-agent", name:"Object Scan Agent", amount_cents:-15600, status:"succeeded", date:"2026-09-08", idempotency_key:"idem_5541f", cat:"◇" },
+    { id:"pi_4b8e0c2a", entry_code:"reporting-export", name:"Reporting Export", amount_cents:-4200, status:"succeeded", date:"2026-09-08", idempotency_key:"idem_8820g", cat:"◈" },
+    { id:"pi_a1c9e0f3", entry_code:"external-payout", name:"Payout — Devon K.", amount_cents:180000, status:"succeeded", date:"2026-09-06", idempotency_key:"idem_2290h", cat:"↧" },
+  ];
+
+  let ledgerEntries = payments
+    .filter(p => p.status === "succeeded")
+    .map(p => ({ id:"le_" + p.id.slice(3), payment_intent_id:p.id, type:p.amount_cents < 0 ? "charge" : "payout", amount_cents:p.amount_cents, entry_code:p.entry_code, date:p.date }));
+
+  let statusFilter = "all";
+  let currentSheetPayment = null;
+
+  // ---------- helpers ----------
+  function fmtUsd(cents){
+    const sign = cents < 0 ? "-" : "";
+    return sign + "$" + (Math.abs(cents)/100).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+  function dayLabel(iso){
+    const d = new Date(iso + "T00:00:00");
+    const today = new Date("2026-09-11T00:00:00");
+    const diff = Math.round((today - d) / 86400000);
+    if(diff === 0) return "Today";
+    if(diff === 1) return "Yesterday";
+    return d.toLocaleDateString(undefined, { weekday:"long", month:"short", day:"numeric" });
+  }
+  function badge(status){
+    const map = { succeeded:["success","succeeded"], pending:["warning","pending"], failed:["danger","failed"] };
+    const [cls, text] = map[status];
+    return `<span class="badge ${cls}"><span class="dot ${cls}"></span>${text}</span>`;
+  }
+
+  // ---------- home ----------
+  function computeBalance(){
+    return payments.filter(p => p.status === "succeeded").reduce((sum, p) => sum + p.amount_cents, 0) + 1_940_000; // opening balance
+  }
+  function renderHome(){
+    const balance = computeBalance();
+    $("#homeBalance").textContent = fmtUsd(balance);
+    const weekOut = payments.filter(p => p.status === "succeeded" && p.amount_cents < 0).reduce((s,p)=>s+p.amount_cents,0);
+    $("#sparkTotal").textContent = fmtUsd(weekOut) + " out";
+
+    const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+    const vals = [12,34,18,54,29,61,44]; // relative spend, illustrative
+    const max = Math.max(...vals);
+    $("#sparkBars").innerHTML = days.map((d,i) => `
+      <div class="spark-bar-wrap">
+        <div class="spark-bar ${i === days.length-1 ? "today" : ""}" style="height:${(vals[i]/max*100).toFixed(0)}%"></div>
+        <div class="spark-day">${d}</div>
+      </div>
+    `).join("");
+
+    $("#homeTxnList").innerHTML = payments.slice(0,4).map(txnRowHtml).join("");
+    bindTxnRows("#homeTxnList");
+  }
+
+  // ---------- activity ----------
+  function txnRowHtml(p){
+    const isIn = p.amount_cents > 0;
+    return `
+      <div class="txn-row" data-id="${p.id}">
+        <div class="txn-icon">${p.cat}</div>
+        <div class="txn-mid">
+          <div class="txn-name">${p.name}</div>
+          <div class="txn-sub">${dayLabel(p.date)} · ${badge(p.status)}</div>
+        </div>
+        <div class="txn-amount ${isIn ? "in" : "out"}">${fmtUsd(p.amount_cents)}</div>
+      </div>
+    `;
+  }
+  function bindTxnRows(scopeSel){
+    $$(scopeSel + " .txn-row").forEach(row => {
+      row.addEventListener("click", () => openTxnSheet(row.dataset.id));
+    });
+  }
+  function renderActivity(){
+    const chips = [
+      ["all","All"], ["succeeded","Succeeded"], ["pending","Pending"], ["failed","Failed"]
+    ];
+    $("#activityChips").innerHTML = chips.map(([v,label]) => `
+      <button class="chip ${statusFilter === v ? "active" : ""}" data-chip="${v}">${label}</button>
+    `).join("");
+    $$("#activityChips .chip").forEach(c => c.addEventListener("click", () => {
+      statusFilter = c.dataset.chip;
+      renderActivity();
+    }));
+
+    const list = payments.filter(p => statusFilter === "all" || p.status === statusFilter);
+    if(!list.length){
+      $("#activityList").innerHTML = `<div class="empty">No transactions match this filter.</div>`;
+      return;
+    }
+    const byDay = {};
+    list.forEach(p => { (byDay[p.date] = byDay[p.date] || []).push(p); });
+    $("#activityList").innerHTML = Object.keys(byDay).sort().reverse().map(date => `
+      <div class="day-group">
+        <div class="day-label">${dayLabel(date)}</div>
+        ${byDay[date].map(txnRowHtml).join("")}
+      </div>
+    `).join("");
+    bindTxnRows("#activityList");
+  }
+
+  // ---------- ledger ----------
+  function renderLedger(){
+    const charges = ledgerEntries.filter(l => l.type === "charge").length;
+    const payouts = ledgerEntries.filter(l => l.type === "payout").length;
+    $("#ledgerStats").innerHTML = `
+      <div class="stat-cell"><div class="stat-cell-value mono">${ledgerEntries.length}</div><div class="stat-cell-label">entries</div></div>
+      <div class="stat-cell"><div class="stat-cell-value mono">${charges}</div><div class="stat-cell-label">charges</div></div>
+      <div class="stat-cell"><div class="stat-cell-value mono">${payouts}</div><div class="stat-cell-label">payouts</div></div>
+    `;
+    $("#ledgerList").innerHTML = ledgerEntries.map(l => `
+      <div class="ledger-entry" data-id="${l.payment_intent_id}">
+        <div class="ledger-id mono">${l.id}</div>
+        <div class="ledger-amt ${l.amount_cents > 0 ? "in" : ""}" style="color:${l.amount_cents > 0 ? "var(--success)" : "var(--paper)"}">${fmtUsd(l.amount_cents)}</div>
+        <div class="ledger-meta">${l.entry_code} · ${l.type} · ${dayLabel(l.date)}</div>
+      </div>
+    `).join("");
+    $$("#ledgerList .ledger-entry").forEach(row => {
+      row.addEventListener("click", () => openTxnSheet(row.dataset.id));
+    });
+  }
+
+  // ---------- bottom sheet: transaction / payment intent detail ----------
+  function openSheet(){ $("#sheet").classList.add("open"); $("#overlay").classList.add("open"); }
+  function closeSheet(){ $("#sheet").classList.remove("open"); $("#overlay").classList.remove("open"); }
+  $("#closeSheet").addEventListener("click", closeSheet);
+  $("#overlay").addEventListener("click", closeSheet);
+
+  function openTxnSheet(id){
+    const p = payments.find(x => x.id === id);
+    if(!p) return;
+    currentSheetPayment = p;
+    $("#sheetEyebrow").textContent = "Payment intent";
+    $("#sheetTitle").textContent = p.id;
+    $("#sheetBody").innerHTML = `
+      <div class="field-row"><span class="field-label">merchant / entry</span><span class="field-value">${p.name}</span></div>
+      <div class="field-row"><span class="field-label">entry_code</span><span class="field-value">${p.entry_code}</span></div>
+      <div class="field-row"><span class="field-label">amount</span><span class="field-value">${fmtUsd(p.amount_cents)}</span></div>
+      <div class="field-row"><span class="field-label">status</span><span class="field-value">${p.status}</span></div>
+      <div class="field-row"><span class="field-label">idempotency_key</span><span class="field-value">${p.idempotency_key}</span></div>
+      <div class="field-row"><span class="field-label">date</span><span class="field-value">${p.date}</span></div>
+      <div class="section-label">Payment intent object</div>
+      <div class="json-block">{
+  "id": "${p.id}",
+  "entry_id": "${ENTRY_ID}",
+  "entry_code": "${p.entry_code}",
+  "amount_cents": ${p.amount_cents},
+  "currency": "usd",
+  "status": "${p.status}",
+  "idempotency_key": "${p.idempotency_key}"
+}</div>
+    `;
+    openSheet();
+  }
+
+  // ---------- action sheets: send / request / top up ----------
+  function openActionSheet(kind){
+    const config = {
+      send:    { eyebrow:"Send funds", verb:"Send", entryLabel:"Recipient" },
+      request: { eyebrow:"Request funds", verb:"Request", entryLabel:"From" },
+      topup:   { eyebrow:"Top up balance", verb:"Top up", entryLabel:"Source" },
+    }[kind];
+    $("#sheetEyebrow").textContent = config.eyebrow;
+    $("#sheetTitle").textContent = ENTRY_CODE;
+    $("#sheetBody").innerHTML = `
+      <div class="confirm-note" id="actionConfirm">${config.verb === "Send" ? "Sent." : config.verb === "Request" ? "Request sent." : "Top up complete."} Reflected in Activity and Ledger.</div>
+      <div class="form-row">
+        <label>${config.entryLabel}</label>
+        <input type="text" id="actEntry" placeholder="billing-ledger-svc" />
+      </div>
+      <div class="form-row">
+        <label>Amount (USD)</label>
+        <input type="text" id="actAmount" inputmode="decimal" placeholder="0.00" />
+      </div>
+      <div class="form-error" id="actError">Enter a recipient and an amount greater than 0.</div>
+      <button class="btn" id="actSubmit">${config.verb}</button>
+    `;
+    $("#actSubmit").addEventListener("click", () => submitAction(kind, config.verb));
+    openSheet();
+  }
+
+  function submitAction(kind, verb){
+    const entry = $("#actEntry").value.trim() || ENTRY_CODE;
+    const amountRaw = $("#actAmount").value.trim();
+    const amount = Math.round(parseFloat(amountRaw) * 100);
+    if(!amountRaw || isNaN(amount) || amount <= 0){
+      $("#actError").classList.add("show");
+      return;
+    }
+    $("#actError").classList.remove("show");
+
+    const signedAmount = kind === "request" ? amount : -amount;
+    const id = "pi_" + Math.random().toString(16).slice(2,10);
+    const record = {
+      id, entry_code: entry, name: kind === "topup" ? "Top up — " + entry : entry,
+      amount_cents: signedAmount, status: "succeeded", date: "2026-09-11",
+      idempotency_key: "idem_" + Math.random().toString(16).slice(2,8),
+      cat: kind === "send" ? "↥" : kind === "request" ? "↧" : "+",
+    };
+    payments.unshift(record);
+    ledgerEntries.unshift({ id:"le_" + id.slice(3), payment_intent_id:id, type: signedAmount > 0 ? "payout" : "charge", amount_cents: signedAmount, entry_code: entry, date: record.date });
+
+    renderHome();
+    renderActivity();
+    renderLedger();
+    $("#actionConfirm").classList.add("show");
+    setTimeout(closeSheet, 900);
+  }
+
+  $$(".action-btn[data-open-sheet]").forEach(btn => {
+    btn.addEventListener("click", () => openActionSheet(btn.dataset.openSheet));
+  });
+
+  // ---------- nav / view switching ----------
+  function setView(view){
+    $$(".view").forEach(v => v.classList.remove("active"));
+    $("#view-" + view).classList.add("active");
+    $$(".nav-btn").forEach(n => n.classList.toggle("active", n.dataset.go === view));
+    $(".app-body").scrollTop = 0;
+    window.scrollTo(0,0);
+    if(view === "activity") renderActivity();
+    if(view === "ledger") renderLedger();
+  }
+  $$("[data-go]").forEach(el => el.addEventListener("click", () => setView(el.dataset.go)));
+  $("#openProfileFromHeader").addEventListener("click", () => setView("profile"));
+
+  // ---------- init ----------
+  renderHome();
+  renderActivity();
+  renderLedger();
+</script>
+</body>
+</html>
